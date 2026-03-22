@@ -11,5 +11,6 @@ dependencies = [
     "greenlet>=3.3.2",
     "passlib>=1.7.4",
     "pydantic-settings>=2.13.1",
+    "pyjwt>=2.12.1",
     "sqlmodel>=0.0.37",
 ]
