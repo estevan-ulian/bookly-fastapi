@@ -1,0 +1,27 @@
+from fastapi import APIRouter, Depends
+from sqlmodel.ext.asyncio.session import AsyncSession
+from src.db.main import get_session
+from src.db.models import UserModel
+from src.auth.dependencies import get_current_user
+from .schemas import ReviewCreateSchema
+from .service import ReviewService
+
+review_router = APIRouter()
+review_service = ReviewService()
+
+
+@review_router.post("/book/{book_uid}")
+async def add_review_to_book(
+    book_uid: str,
+    review_data: ReviewCreateSchema,
+    current_user: UserModel = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    user_email = current_user.email
+    new_review = await review_service.add_review_to_book(
+        user_email=user_email,
+        book_uid=book_uid,
+        review_data=review_data,
+        session=session
+    )
+    return new_review

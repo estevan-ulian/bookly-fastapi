@@ -6,7 +6,7 @@ from datetime import timedelta, datetime, timezone
 from src.db.main import get_session
 from src.db.redis import add_jti_to_blocklist
 from .schemas import UserCreateSchema, UserSchema, UserLoginSchema, UserBooksSchema
-from .services import UserService
+from .service import UserService
 from .utils import create_access_token, verify_password
 from .dependencies import (
     RefreshTokenBearer,

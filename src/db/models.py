@@ -86,7 +86,7 @@ class BookModel(SQLModel, table=True):
             default=utcnow,
         ))
     user: Optional["UserModel"] = Relationship(back_populates="books")
-    review: List["ReviewModel"] = Relationship(back_populates="book")
+    reviews: List["ReviewModel"] = Relationship(back_populates="book")
 
     def __repr__(self):
         return f"<Book {self.title}>"

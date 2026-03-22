@@ -2,6 +2,7 @@ import uuid
 from pydantic import BaseModel, Field
 from typing import List
 from src.books.schemas import BookSchema
+from src.reviews.schemas import ReviewSchema
 from datetime import datetime
 
 
@@ -19,6 +20,7 @@ class UserSchema(BaseModel):
 
 class UserBooksSchema(UserSchema):
     books: List[BookSchema]
+    reviews: List[ReviewSchema]
 
 
 class UserCreateSchema(BaseModel):
