@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field, Column
 import sqlalchemy.dialects.postgresql as pg
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import uuid
 
 
@@ -24,13 +24,13 @@ class BookModel(SQLModel, table=True):
     created_at: datetime = Field(
         sa_column=Column(
             pg.TIMESTAMP,
-            default=datetime.now()
+            default=lambda: datetime.now(timezone.utc)
         )
     )
     updated_at: datetime = Field(
         sa_column=Column(
             pg.TIMESTAMP,
-            default=datetime.now(),
+            default=lambda: datetime.now(timezone.utc),
         ))
 
     def __repr__(self):
