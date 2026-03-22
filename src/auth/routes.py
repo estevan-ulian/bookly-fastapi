@@ -4,10 +4,11 @@ from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 from datetime import timedelta, datetime, timezone
 from src.db.main import get_session
+from src.db.redis import add_jti_to_blocklist
 from .schemas import UserCreateSchema, UserSchema, UserLoginSchema
 from .services import UserService
 from .utils import create_access_token, verify_password
-from .dependencies import RefreshTokenBearer
+from .dependencies import RefreshTokenBearer, AccessTokenBearer
 
 
 auth_router = APIRouter()
@@ -86,4 +87,16 @@ async def refresh_access_token(token_details: dict = Depends(RefreshTokenBearer(
 
     raise HTTPException(
         status_code=status.HTTP_403_UNAUTHORIZED, detail="Refresh token has expired. Please log in again."
+    )
+
+
+@auth_router.get("/logout")
+async def logout_users(token_details: dict = Depends(AccessTokenBearer())):
+    jti = token_details["jti"]
+    await add_jti_to_blocklist(jti)
+    return JSONResponse(
+        content={
+            "message": "Logged out successfuly",
+        },
+        status_code=status.HTTP_200_OK
     )
