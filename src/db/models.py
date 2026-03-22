@@ -83,3 +83,41 @@ class BookModel(SQLModel, table=True):
 
     def __repr__(self):
         return f"<Book {self.title}>"
+
+
+class ReviewModel(SQLModel, table=True):
+    __tablename__ = "reviews"  # type: ignore
+
+    uid: uuid.UUID = Field(
+        sa_column=Column(
+            pg.UUID,
+            nullable=False,
+            primary_key=True,
+            default=uuid.uuid4
+        )
+    )
+    rating: int = Field(lt=5)
+    review_text: str = Field(max_length=255)
+    user_uid: Optional[uuid.UUID] = Field(
+        default=None,
+        foreign_key="users.uid",
+    )
+    book_uid: Optional[uuid.UUID] = Field(
+        default=None,
+        foreign_key="books.uid",
+    )
+    created_at: datetime = Field(
+        sa_column=Column(
+            pg.TIMESTAMP(timezone=True),
+            default=utcnow,
+        )
+    )
+    updated_at: datetime = Field(
+        sa_column=Column(
+            pg.TIMESTAMP(timezone=True),
+            default=utcnow,
+        ))
+    user: Optional["UserModel"] = Relationship(back_populates="books")
+
+    def __repr__(self):
+        return f"<Review for book '{self.book_uid}' by user '{self.user_uid}'.>"
