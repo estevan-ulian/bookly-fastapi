@@ -1,10 +1,9 @@
-import sqlalchemy.dialects.postgresql as pg
-from sqlmodel import SQLModel, Field, Column, Relationship
-from datetime import datetime
-from typing import List
-from src.utils import utcnow
-from src.books import models
 import uuid
+import sqlalchemy.dialects.postgresql as pg
+from sqlmodel import SQLModel, Column, Relationship, Field
+from datetime import datetime, date
+from typing import Optional, List
+from src.utils import utcnow
 
 
 class UserModel(SQLModel, table=True):
@@ -37,7 +36,7 @@ class UserModel(SQLModel, table=True):
             default=utcnow
         )
     )
-    books: List["models.BookModel"] = Relationship(
+    books: List["BookModel"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={
             'lazy': 'selectin'
@@ -46,3 +45,41 @@ class UserModel(SQLModel, table=True):
 
     def __repr__(self):
         return f"<User {self.username}>"
+
+
+class BookModel(SQLModel, table=True):
+    __tablename__ = "books"  # type: ignore
+
+    uid: uuid.UUID = Field(
+        sa_column=Column(
+            pg.UUID,
+            nullable=False,
+            primary_key=True,
+            default=uuid.uuid4
+        )
+    )
+    title: str
+    author: str
+    publisher: str
+    published_date: date
+    page_count: int
+    language: str
+    user_uid: Optional[uuid.UUID] = Field(
+        default=None,
+        foreign_key="users.uid",
+    )
+    created_at: datetime = Field(
+        sa_column=Column(
+            pg.TIMESTAMP(timezone=True),
+            default=utcnow,
+        )
+    )
+    updated_at: datetime = Field(
+        sa_column=Column(
+            pg.TIMESTAMP(timezone=True),
+            default=utcnow,
+        ))
+    user: Optional["UserModel"] = Relationship(back_populates="books")
+
+    def __repr__(self):
+        return f"<Book {self.title}>"

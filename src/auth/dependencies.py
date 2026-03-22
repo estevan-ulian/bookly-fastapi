@@ -7,8 +7,8 @@ from typing import List
 from .utils import decode_token
 from src.db.redis import token_in_blocklist
 from src.db.main import get_session
+from src.db.models import UserModel
 from .services import UserService
-from .models import UserModel
 
 user_service = UserService()
 

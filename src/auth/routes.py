@@ -8,7 +8,12 @@ from src.db.redis import add_jti_to_blocklist
 from .schemas import UserCreateSchema, UserSchema, UserLoginSchema, UserBooksSchema
 from .services import UserService
 from .utils import create_access_token, verify_password
-from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
+from .dependencies import (
+    RefreshTokenBearer,
+    AccessTokenBearer,
+    RoleChecker,
+    get_current_user
+)
 
 
 auth_router = APIRouter()

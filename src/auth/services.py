@@ -1,6 +1,6 @@
-from .models import UserModel
 from .schemas import UserCreateSchema
 from .utils import generate_password_hash
+from src.db.models import UserModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
