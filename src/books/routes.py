@@ -5,14 +5,15 @@ from src.books.schemas import BookSchema, BookCreateSchema, BookUpdateSchema
 from src.books.service import BookService
 from src.db.main import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
-from src.auth.dependencies import AccessTokenBearer
+from src.auth.dependencies import AccessTokenBearer, RoleChecker
 
 book_router = APIRouter()
 book_service = BookService()
 access_token_bearer = AccessTokenBearer()
+role_checker = RoleChecker(allowed_roles=["admin", "user"])
 
 
-@book_router.get("/", response_model=List[BookSchema])
+@book_router.get("/", response_model=List[BookSchema], dependencies=[Depends(role_checker)])
 async def get_all_books(
     session: AsyncSession = Depends(get_session),
     token_details=Depends(access_token_bearer)
@@ -22,7 +23,7 @@ async def get_all_books(
     return books
 
 
-@book_router.post("/", status_code=status.HTTP_201_CREATED, response_model=BookSchema)
+@book_router.post("/", status_code=status.HTTP_201_CREATED, response_model=BookSchema, dependencies=[Depends(role_checker)])
 async def create_book(
     book_data: BookCreateSchema,
     session: AsyncSession = Depends(get_session),
@@ -32,7 +33,7 @@ async def create_book(
     return new_book
 
 
-@book_router.get("/{book_uuid}", response_model=BookSchema)
+@book_router.get("/{book_uuid}", response_model=BookSchema, dependencies=[Depends(role_checker)])
 async def get_book(
     book_uuid: str,
     session: AsyncSession = Depends(get_session),
@@ -46,7 +47,7 @@ async def get_book(
             status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
 
 
-@book_router.patch("/{book_uuid}", response_model=BookSchema)
+@book_router.patch("/{book_uuid}", response_model=BookSchema, dependencies=[Depends(role_checker)])
 async def update_book(
     book_uuid: str,
     book_update_data: BookUpdateSchema,

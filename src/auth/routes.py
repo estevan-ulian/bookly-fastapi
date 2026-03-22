@@ -8,11 +8,12 @@ from src.db.redis import add_jti_to_blocklist
 from .schemas import UserCreateSchema, UserSchema, UserLoginSchema
 from .services import UserService
 from .utils import create_access_token, verify_password
-from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
 
 
 auth_router = APIRouter()
 user_service = UserService()
+role_checker = RoleChecker(allowed_roles=["admin", "user"])
 
 REFRESH_ACCESS_TOKEN_EXPIRY_DAYS = 7
 
@@ -41,7 +42,8 @@ async def login_users(user_login_data: UserLoginSchema, session: AsyncSession = 
             access_token = create_access_token(
                 user_data={
                     'email': user.email,
-                    'user_id': str(user.uid)
+                    'user_id': str(user.uid),
+                    'role': user.role
                 },
             )
 
@@ -88,6 +90,11 @@ async def refresh_access_token(token_details: dict = Depends(RefreshTokenBearer(
     raise HTTPException(
         status_code=status.HTTP_403_UNAUTHORIZED, detail="Refresh token has expired. Please log in again."
     )
+
+
+@auth_router.get("/me")
+async def get_current_user_details(user=Depends(get_current_user), _: bool = Depends(role_checker)):
+    return user
 
 
 @auth_router.get("/logout")
