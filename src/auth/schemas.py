@@ -21,3 +21,8 @@ class UserCreateSchema(BaseModel):
     last_name: str = Field(min_length=3, max_length=24)
     email: str = Field(max_length=40)
     password: str = Field(min_length=6, max_length=40)
+
+
+class UserLoginSchema(BaseModel):
+    email: str = Field(max_length=40)
+    password: str = Field(min_length=6, max_length=40)
