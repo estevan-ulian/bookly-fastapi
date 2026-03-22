@@ -1,7 +1,9 @@
-from sqlmodel import SQLModel, Field, Column
 import sqlalchemy.dialects.postgresql as pg
+from sqlmodel import SQLModel, Field, Column, Relationship
 from datetime import datetime
+from typing import List
 from src.utils import utcnow
+from src.books import models
 import uuid
 
 
@@ -34,6 +36,12 @@ class UserModel(SQLModel, table=True):
             pg.TIMESTAMP(timezone=True),
             default=utcnow
         )
+    )
+    books: List["models.BookModel"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={
+            'lazy': 'selectin'
+        }
     )
 
     def __repr__(self):

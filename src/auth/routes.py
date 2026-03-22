@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from datetime import timedelta, datetime, timezone
 from src.db.main import get_session
 from src.db.redis import add_jti_to_blocklist
-from .schemas import UserCreateSchema, UserSchema, UserLoginSchema
+from .schemas import UserCreateSchema, UserSchema, UserLoginSchema, UserBooksSchema
 from .services import UserService
 from .utils import create_access_token, verify_password
 from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
@@ -92,7 +92,7 @@ async def refresh_access_token(token_details: dict = Depends(RefreshTokenBearer(
     )
 
 
-@auth_router.get("/me")
+@auth_router.get("/me", response_model=UserBooksSchema)
 async def get_current_user_details(user=Depends(get_current_user), _: bool = Depends(role_checker)):
     return user
 

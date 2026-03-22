@@ -1,5 +1,7 @@
 import uuid
 from pydantic import BaseModel, Field
+from typing import List
+from src.books.schemas import BookSchema
 from datetime import datetime
 
 
@@ -13,6 +15,10 @@ class UserSchema(BaseModel):
     password_hash: str = Field(exclude=True)
     created_at: datetime
     updated_at: datetime
+
+
+class UserBooksSchema(UserSchema):
+    books: List[BookSchema]
 
 
 class UserCreateSchema(BaseModel):

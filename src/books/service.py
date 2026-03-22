@@ -1,3 +1,4 @@
+import uuid
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select, desc
 from .schemas import BookUpdateSchema, BookCreateSchema
@@ -12,17 +13,25 @@ class BookService:
         books = result.all()
         return books
 
+    async def get_user_books(self, user_uid: str, session: AsyncSession):
+        statement = select(BookModel).where(
+            BookModel.user_uid == user_uid).order_by(desc(BookModel.created_at))
+        result = await session.exec(statement)
+        books = result.all()
+        return books
+
     async def get_book_by_uid(self, book_uuid, session: AsyncSession):
         statement = select(BookModel).where(BookModel.uid == book_uuid)
         result = await session.exec(statement)
         book = result.first()
         return book if book is not None else None
 
-    async def create_book(self, book_data: BookCreateSchema, session: AsyncSession):
+    async def create_book(self, book_data: BookCreateSchema, user_uid: uuid.UUID, session: AsyncSession):
         book_data_dict = book_data.model_dump()
         new_book = BookModel(
             **book_data_dict,
         )
+        new_book.user_uid = user_uid
 
         new_book.published_date = datetime.strptime(
             book_data_dict["published_date"], "%Y-%m-%d").date()
