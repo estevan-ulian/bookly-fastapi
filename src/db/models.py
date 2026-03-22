@@ -42,6 +42,12 @@ class UserModel(SQLModel, table=True):
             'lazy': 'selectin'
         }
     )
+    reviews: List["ReviewModel"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={
+            'lazy': 'selectin'
+        }
+    )
 
     def __repr__(self):
         return f"<User {self.username}>"
@@ -80,6 +86,7 @@ class BookModel(SQLModel, table=True):
             default=utcnow,
         ))
     user: Optional["UserModel"] = Relationship(back_populates="books")
+    review: List["ReviewModel"] = Relationship(back_populates="book")
 
     def __repr__(self):
         return f"<Book {self.title}>"
@@ -117,7 +124,8 @@ class ReviewModel(SQLModel, table=True):
             pg.TIMESTAMP(timezone=True),
             default=utcnow,
         ))
-    user: Optional["UserModel"] = Relationship(back_populates="books")
+    user: Optional["UserModel"] = Relationship(back_populates="reviews")
+    book: Optional["BookModel"] = Relationship(back_populates="reviews")
 
     def __repr__(self):
         return f"<Review for book '{self.book_uid}' by user '{self.user_uid}'.>"
