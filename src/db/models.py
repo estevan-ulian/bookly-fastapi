@@ -6,6 +6,16 @@ from typing import Optional, List
 from src.utils import utcnow
 
 
+class BookTagModel(SQLModel, table=True):
+    __tablename__ = "book_tag"  # type: ignore
+    book_uid: Optional[uuid.UUID] = Field(
+        default=None, foreign_key="books.uid", primary_key=True
+    )
+    tag_uid: Optional[uuid.UUID] = Field(
+        default=None, foreign_key="tags.uid", primary_key=True
+    )
+
+
 class UserModel(SQLModel, table=True):
     __tablename__ = "users"  # type: ignore
 
@@ -86,7 +96,15 @@ class BookModel(SQLModel, table=True):
             default=utcnow,
         ))
     user: Optional["UserModel"] = Relationship(back_populates="books")
-    reviews: List["ReviewModel"] = Relationship(back_populates="book")
+    reviews: List["ReviewModel"] = Relationship(
+        back_populates="book",
+        sa_relationship_kwargs={'lazy': 'selectin'}
+    )
+    tags: List["TagModel"] = Relationship(
+        back_populates="books",
+        link_model=BookTagModel,
+        sa_relationship_kwargs={'lazy': 'selectin'}
+    )
 
     def __repr__(self):
         return f"<Book {self.title}>"
@@ -129,3 +147,39 @@ class ReviewModel(SQLModel, table=True):
 
     def __repr__(self):
         return f"<Review for book '{self.book_uid}' by user '{self.user_uid}'.>"
+
+
+class TagModel(SQLModel, table=True):
+    __tablename__ = "tags"  # type: ignore
+
+    uid: uuid.UUID = Field(
+        sa_column=Column(
+            pg.UUID,
+            nullable=False,
+            primary_key=True,
+            default=uuid.uuid4
+        )
+    )
+    name: str = Field(min_length=3, max_length=20)
+    created_at: datetime = Field(
+        sa_column=Column(
+            pg.TIMESTAMP(timezone=True),
+            default=utcnow
+        )
+    )
+    updated_at: datetime = Field(
+        sa_column=Column(
+            pg.TIMESTAMP(timezone=True),
+            default=utcnow
+        )
+    )
+    books: List["BookModel"] = Relationship(
+        back_populates="tags",
+        link_model=BookTagModel,
+        sa_relationship_kwargs={
+            'lazy': 'selectin'
+        }
+    )
+
+    def __repr__(self):
+        return f"<Tag {self.name}>"

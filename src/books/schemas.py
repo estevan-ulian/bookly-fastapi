@@ -3,6 +3,7 @@ from typing import List
 from pydantic import BaseModel
 from datetime import datetime, date
 from src.reviews.schemas import ReviewSchema
+from src.tags.schemas import TagSchema
 
 
 class BookSchema(BaseModel):
@@ -19,6 +20,7 @@ class BookSchema(BaseModel):
 
 class BookDetailSchema(BookSchema):
     reviews: List[ReviewSchema]
+    tags: List[TagSchema]
 
 
 class BookCreateSchema(BaseModel):
