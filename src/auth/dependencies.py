@@ -1,7 +1,6 @@
 from fastapi import Request, status, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.security import HTTPBearer
-from fastapi.security.http import HTTPAuthorizationCredentials
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List
 from .utils import decode_token
@@ -17,10 +16,10 @@ class TokenBearer(HTTPBearer):
     def __init__(self, auto_error=True):
         super().__init__(auto_error=auto_error)
 
-    async def __call__(self, request: Request) -> HTTPAuthorizationCredentials | None:
+    async def __call__(self, request: Request) -> dict | None:
         creds = await super().__call__(request)
 
-        token = creds.credentials
+        token = creds.credentials  # type: ignore
 
         token_data = decode_token(token)
 
@@ -33,7 +32,7 @@ class TokenBearer(HTTPBearer):
                 }
             )
 
-        if await token_in_blocklist(token_data['jti']):
+        if await token_in_blocklist(token_data['jti']):  # type: ignore
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
@@ -42,7 +41,7 @@ class TokenBearer(HTTPBearer):
                 }
             )
 
-        self.verify_token_data(token_data)
+        self.verify_token_data(token_data)  # type: ignore
 
         return token_data
 
