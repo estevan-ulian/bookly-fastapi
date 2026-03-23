@@ -14,6 +14,11 @@ from .dependencies import (
     RoleChecker,
     get_current_user
 )
+from src.exceptions import (
+    UserAlreadyExistsException,
+    InvalidCredentials,
+    InvalidTokenException
+)
 
 
 auth_router = APIRouter()
@@ -28,8 +33,7 @@ async def create_user_account(user_data: UserCreateSchema, session: AsyncSession
     email = user_data.email
     user_exists = await user_service.user_exists(email, session)
     if user_exists:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User with this email already exists")
+        raise UserAlreadyExistsException()
     new_user = await user_service.create_user(user_data, session)
     return new_user
 
@@ -72,9 +76,7 @@ async def login_users(user_login_data: UserLoginSchema, session: AsyncSession = 
                     }
                 }
             )
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
-    )
+    raise InvalidCredentials()
 
 
 @auth_router.get("/refresh_token")
@@ -92,9 +94,7 @@ async def refresh_access_token(token_details: dict = Depends(RefreshTokenBearer(
             }
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_403_UNAUTHORIZED, detail="Refresh token has expired. Please log in again."
-    )
+    raise InvalidTokenException()
 
 
 @auth_router.get("/me", response_model=UserBooksSchema)

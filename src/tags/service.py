@@ -1,10 +1,10 @@
-from fastapi import status
-from fastapi.exceptions import HTTPException
 from sqlmodel import select, desc
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.models import TagModel
 from src.books.service import BookService
 from .schemas import TagCreateSchema, TagAddModel
+from src.exceptions import (BookNotFoundException,
+                            TagNotFoundException, TagAlreadyExistsException)
 
 book_service = BookService()
 
@@ -16,10 +16,7 @@ class TagService:
         result = await session.exec(statement)
         tag = result.first()
         if tag:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="This tag name already exists"
-            )
+            raise TagAlreadyExistsException()
         new_tag = TagModel(name=tag_data.name)  # type: ignore
         session.add(new_tag)
         await session.commit()
@@ -43,10 +40,7 @@ class TagService:
         book = await book_service.get_book_by_uid(book_uid, session)
 
         if not book:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Book not found"
-            )
+            raise BookNotFoundException()
 
         for tag_item in tag_data.tags:
             statement = select(TagModel).where(TagModel.name == tag_item.name)
@@ -66,8 +60,7 @@ class TagService:
         """Update a tag by its uid"""
         tag_to_update = await self.get_tag_by_uid(tag_uid, session)
         if not tag_to_update:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+            raise TagNotFoundException()
 
         tag_update_data_dict = tag_update_data.model_dump()
         for key, value in tag_update_data_dict.items():
