@@ -11,7 +11,8 @@ from src.exceptions import (
     InvalidTokenException,
     AccessTokenRequiredException,
     RefreshTokenRequiredException,
-    InsufficientPermissionException
+    InsufficientPermissionException,
+    AccountNotVerifiedException
 )
 
 user_service = UserService()
@@ -73,6 +74,8 @@ class RoleChecker:
         self.allowed_roles = allowed_roles
 
     async def __call__(self, current_user: UserModel = Depends(get_current_user)):
+        if not current_user.is_verified:
+            raise AccountNotVerifiedException()
         if current_user.role in self.allowed_roles:
             return True
         raise InsufficientPermissionException

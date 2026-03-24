@@ -7,11 +7,13 @@ from src.db.main import get_session
 from src.db.redis import add_jti_to_blocklist
 from src.config import Config
 from .service import UserService
-from .utils import create_access_token, verify_password, create_url_safe_token, decode_url_safe_token
+from .utils import create_access_token, verify_password, create_url_safe_token, decode_url_safe_token, generate_password_hash
 from .schemas import (
     UserCreateSchema,
     UserLoginSchema,
-    UserBooksSchema
+    UserBooksSchema,
+    PasswordResetRequestSchema,
+    PasswordResetConfirmSchema
 )
 from .dependencies import (
     RefreshTokenBearer,
@@ -23,7 +25,8 @@ from src.exceptions import (
     UserAlreadyExistsException,
     InvalidCredentials,
     InvalidTokenException,
-    UserNotFoundException
+    UserNotFoundException,
+    PasswordsDoNotMatchException
 )
 from src.mail import mail, create_message
 
@@ -57,6 +60,7 @@ async def create_user_account(user_data: UserCreateSchema, session: AsyncSession
     )
     await mail.send_message(message)
     return {
+        "success": True,
         "message": "Account created! Please check your email to verify your account.",
         "user": new_user
     }
@@ -157,7 +161,7 @@ async def get_current_user_details(user=Depends(get_current_user), _: bool = Dep
 
 
 @auth_router.get("/logout")
-async def logout_users(token_details: dict = Depends(AccessTokenBearer())):
+async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
     jti = token_details["jti"]
     await add_jti_to_blocklist(jti)
     return JSONResponse(
@@ -165,4 +169,65 @@ async def logout_users(token_details: dict = Depends(AccessTokenBearer())):
             "message": "Logged out successfuly",
         },
         status_code=status.HTTP_200_OK
+    )
+
+
+@auth_router.post("/reset_password")
+async def reset_password(email_data: PasswordResetRequestSchema):
+    email = email_data.email
+    token = create_url_safe_token({"email": email})
+    verify_link = f"http://{Config.APP_DOMAIN}/api/v1/reset_password_confirm/{token}"
+    html_message = f"""
+        <h1>Reset your password!</h1>
+        <p>We received a request to reset your password. Click the link below to proceed:</p><br>
+        <a style='padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;' href="{verify_link}">Reset Password</a>
+    """
+    message = create_message(
+        recipients=[NameEmail(name="", email=email)],
+        subject="Password Reset Request",
+        body=html_message
+    )
+    await mail.send_message(message)
+    return JSONResponse(
+        content={
+            "success": True,
+            "message": "Password reset email sent. Please check your email to proceed.",
+        },
+        status_code=status.HTTP_200_OK
+    )
+
+
+@auth_router.post("/reset_password_confirm/{token}")
+async def reset_password_confirm(token: str, passwords: PasswordResetConfirmSchema, session: AsyncSession = Depends(get_session)):
+    new_password = passwords.new_password
+    new_password_confirm = passwords.new_password_confirm
+    if new_password != new_password_confirm:
+        raise PasswordsDoNotMatchException()
+
+    token_data = decode_url_safe_token(token)
+    if not token_data:
+        raise InvalidTokenException()
+    user_email = token_data.get("email")
+    if user_email:
+        user = await user_service.get_user_by_email(user_email, session)
+
+        if not user:
+            raise UserNotFoundException()
+
+        password_hash = generate_password_hash(new_password)
+        await user_service.update_user({"password_hash": password_hash}, user, session)
+
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": "Password reset successfully"
+            },
+            status_code=status.HTTP_200_OK
+        )
+    return JSONResponse(
+        content={
+            "success": False,
+            "message": "An error occurred during password reset. Please, try again later."
+        },
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
     )

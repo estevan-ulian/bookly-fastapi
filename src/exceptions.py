@@ -63,6 +63,16 @@ class TagNotFoundException(BooklyException):
     pass
 
 
+class AccountNotVerifiedException(BooklyException):
+    """User account is not verified"""
+    pass
+
+
+class PasswordsDoNotMatchException(BooklyException):
+    """The provided new password and new password confirmation do not match"""
+    pass
+
+
 def create_exception_handler(
     status_code: int,
     initial_detail: Any
@@ -82,6 +92,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_409_CONFLICT,
             initial_detail={
+                "success": False,
                 "message": "User with this email already exists",
                 "error_code": "USER_EXISTS"
             }
@@ -93,6 +104,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_401_UNAUTHORIZED,
             initial_detail={
+                "success": False,
                 "message": "Please provide a valid access token",
                 "resolution": "Get an access token",
                 "error_code": "ACCESS_TOKEN_REQUIRED"
@@ -105,6 +117,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_401_UNAUTHORIZED,
             initial_detail={
+                "success": False,
                 "message": "Please provide a valid refresh token",
                 "resolution": "Get an refresh token",
                 "error_code": "REFRESH_TOKEN_REQUIRED"
@@ -117,6 +130,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_404_NOT_FOUND,
             initial_detail={
+                "success": False,
                 "message": "User not found",
                 "error_code": "USER_NOT_FOUND"
             }
@@ -128,6 +142,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_403_FORBIDDEN,
             initial_detail={
+                "success": False,
                 "message": "Token has been revoked",
                 "error_code": "TOKEN_REVOKED"
             }
@@ -139,6 +154,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_401_UNAUTHORIZED,
             initial_detail={
+                "success": False,
                 "message": "Please provide a valid email and password",
                 "error_code": "INVALID_CREDENTIALS"
             }
@@ -150,6 +166,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_403_FORBIDDEN,
             initial_detail={
+                "success": False,
                 "message": "You are not allowed to perform this action",
                 "error_code": "INSUFFICIENT_PERMISSION"
             }
@@ -161,6 +178,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_404_NOT_FOUND,
             initial_detail={
+                "success": False,
                 "message": "Book not found",
                 "error_code": "BOOK_NOT_FOUND"
             }
@@ -172,6 +190,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_409_CONFLICT,
             initial_detail={
+                "success": False,
                 "message": "A tag with this name alread exists",
                 "error_code": "TAG_ALREADY_EXISTS"
             }
@@ -183,6 +202,7 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_404_NOT_FOUND,
             initial_detail={
+                "success": False,
                 "message": "Tag not found",
                 "error_code": "TAG_NOT_FOUND"
             }
@@ -194,8 +214,34 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_403_FORBIDDEN,
             initial_detail={
+                "success": False,
                 "message": "Please provide a valid token",
                 "error_code": "INVALID_TOKEN"
+            }
+        )
+    )
+
+    app.add_exception_handler(
+        AccountNotVerifiedException,
+        create_exception_handler(
+            status_code=status.HTTP_403_FORBIDDEN,
+            initial_detail={
+                "success": False,
+                "message": "Account not verified.",
+                "resolution": "Please check your email for verification instructions.",
+                "error_code": "ACCOUNT_NOT_VERIFIED"
+            }
+        )
+    )
+
+    app.add_exception_handler(
+        PasswordsDoNotMatchException,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            initial_detail={
+                "success": False,
+                "message": "The provided new password and new password confirmation do not match",
+                "error_code": "PASSWORDS_DO_NOT_MATCH"
             }
         )
     )
@@ -204,6 +250,7 @@ def register_exceptions(app: FastAPI):
     async def internal_server_error(request, exception):
         return JSONResponse(
             content={
+                "success": False,
                 "message": "Oops... Something went wrong",
                 "error_code": "SERVER_ERROR"
             },

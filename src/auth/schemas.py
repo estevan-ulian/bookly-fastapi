@@ -34,3 +34,13 @@ class UserCreateSchema(BaseModel):
 class UserLoginSchema(BaseModel):
     email: str = Field(max_length=40)
     password: str = Field(min_length=6, max_length=40)
+
+
+class PasswordResetRequestSchema(BaseModel):
+    email: str = Field(max_length=40)
+
+
+class PasswordResetConfirmSchema(BaseModel):
+    token: str
+    new_password: str = Field(min_length=6, max_length=40)
+    new_password_confirm: str = Field(min_length=6, max_length=40)
