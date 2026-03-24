@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 9993
+    ALLOWED_ORIGINS: list[str] = ["*"]
+    ALLOWED_HOSTS: list[str] = ["*"]
+    DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"
 
     model_config = SettingsConfigDict(
         env_file=".env",
