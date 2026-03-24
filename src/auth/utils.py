@@ -3,6 +3,7 @@ import uuid
 import logging
 from passlib.context import CryptContext
 from datetime import timedelta, datetime, timezone
+from itsdangerous import URLSafeTimedSerializer
 from src.config import Config
 
 password_context = CryptContext(
@@ -46,5 +47,28 @@ def decode_token(token: str) -> dict | None:
         )
         return token_data
     except jwt.PyJWTError as error:
+        logging.exception(error)
+        return None
+
+
+token_serializer = URLSafeTimedSerializer(
+    secret_key=Config.JWT_SECRET_KEY,
+    salt="email-configuration",
+)
+
+token_salt = "email-configuration"
+
+
+def create_url_safe_token(data: dict):
+    token = token_serializer.dumps(obj=data)
+    return token
+
+
+def decode_url_safe_token(token: str):
+    try:
+        token_data = token_serializer.loads(s=token)
+        return token_data
+
+    except Exception as error:
         logging.exception(error)
         return None

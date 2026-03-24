@@ -27,3 +27,10 @@ class UserService:
         session.add(new_user)
         await session.commit()
         return new_user
+
+    async def update_user(self, user_data: dict, user: UserModel, session: AsyncSession):
+        for key, value in user_data.items():
+            setattr(user, key, value)
+        await session.commit()
+        await session.refresh(user)
+        return user
