@@ -61,12 +61,11 @@ async def create_user_account(user_data: UserCreateSchema, session: AsyncSession
         <p>Please, verify your email address by clicking the link below:</p><br>
         <a href="{verify_link}">Verify Email</a>
     """
-    message = create_message(
+    send_email.delay(
         recipients=[NameEmail(name=new_user.first_name, email=new_user.email)],
         subject="Welcome! Verify your email!",
         body=html_message
     )
-    send_email.delay(message)
     return {
         "success": True,
         "message": "Account created! Please check your email to verify your account.",
