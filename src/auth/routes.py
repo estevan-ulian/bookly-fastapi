@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, BackgroundTasks
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi_mail import NameEmail
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -11,6 +11,7 @@ from .service import UserService
 from .utils import create_access_token, verify_password, create_url_safe_token, decode_url_safe_token, generate_password_hash
 from .schemas import (
     UserCreateSchema,
+    UserCreateResponseSchema,
     UserLoginSchema,
     UserBooksSchema,
     PasswordResetRequestSchema,
@@ -39,8 +40,8 @@ role_checker = RoleChecker(allowed_roles=["admin", "user"])
 REFRESH_ACCESS_TOKEN_EXPIRY_DAYS = 7
 
 
-@auth_router.post("/signup", status_code=status.HTTP_201_CREATED)
-async def create_user_account(user_data: UserCreateSchema, bg_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
+@auth_router.post("/signup", response_model=UserCreateResponseSchema, status_code=status.HTTP_201_CREATED)
+async def create_user_account(user_data: UserCreateSchema, session: AsyncSession = Depends(get_session)):
     email = user_data.email
     user_exists = await user_service.user_exists(email, session)
     if user_exists:

@@ -31,6 +31,12 @@ class UserCreateSchema(BaseModel):
     password: str = Field(min_length=6, max_length=40)
 
 
+class UserCreateResponseSchema(BaseModel):
+    success: bool
+    message: str
+    user: UserSchema
+
+
 class UserLoginSchema(BaseModel):
     email: str = Field(max_length=40)
     password: str = Field(min_length=6, max_length=40)
