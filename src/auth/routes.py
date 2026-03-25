@@ -8,7 +8,13 @@ from src.db.redis import add_jti_to_blocklist
 from src.config import Config
 from src.worker import send_email
 from .service import UserService
-from .utils import create_access_token, verify_password, create_url_safe_token, decode_url_safe_token, generate_password_hash
+from .utils import (
+    create_access_token,
+    verify_password,
+    create_url_safe_token,
+    decode_url_safe_token,
+    generate_password_hash
+)
 from .schemas import (
     UserCreateSchema,
     UserCreateResponseSchema,
