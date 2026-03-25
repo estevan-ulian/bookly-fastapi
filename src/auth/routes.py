@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi_mail import NameEmail
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -6,6 +6,7 @@ from datetime import timedelta, datetime, timezone
 from src.db.main import get_session
 from src.db.redis import add_jti_to_blocklist
 from src.config import Config
+from src.worker import send_email
 from .service import UserService
 from .utils import create_access_token, verify_password, create_url_safe_token, decode_url_safe_token, generate_password_hash
 from .schemas import (
@@ -28,7 +29,7 @@ from src.exceptions import (
     UserNotFoundException,
     PasswordsDoNotMatchException
 )
-from src.mail import mail, create_message
+from src.mail import create_message
 
 
 auth_router = APIRouter()
@@ -39,7 +40,7 @@ REFRESH_ACCESS_TOKEN_EXPIRY_DAYS = 7
 
 
 @auth_router.post("/signup", status_code=status.HTTP_201_CREATED)
-async def create_user_account(user_data: UserCreateSchema, session: AsyncSession = Depends(get_session)):
+async def create_user_account(user_data: UserCreateSchema, bg_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
     email = user_data.email
     user_exists = await user_service.user_exists(email, session)
     if user_exists:
@@ -58,7 +59,7 @@ async def create_user_account(user_data: UserCreateSchema, session: AsyncSession
         subject="Welcome! Verify your email!",
         body=html_message
     )
-    await mail.send_message(message)
+    send_email.delay(message)
     return {
         "success": True,
         "message": "Account created! Please check your email to verify your account.",
@@ -187,7 +188,7 @@ async def reset_password(email_data: PasswordResetRequestSchema):
         subject="Password Reset Request",
         body=html_message
     )
-    await mail.send_message(message)
+    send_email.delay(message)
     return JSONResponse(
         content={
             "success": True,

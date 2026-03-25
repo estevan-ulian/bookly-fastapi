@@ -8,8 +8,7 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
 
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 9993
+    REDIS_URL: str = "redis://localhost:9993/0"
 
     ALLOWED_ORIGINS: list[str] = ["*"]
     ALLOWED_HOSTS: list[str] = ["*"]
@@ -35,3 +34,7 @@ class Settings(BaseSettings):
 
 
 Config = Settings()  # type: ignore
+
+broker_url = Config.REDIS_URL
+result_backend = Config.REDIS_URL
+broker_connection_retry_on_startup = True
