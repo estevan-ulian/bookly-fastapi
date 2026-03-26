@@ -2,6 +2,7 @@ from typing import Any, Callable, Awaitable
 from fastapi import FastAPI, status
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 
 class BooklyException(Exception):
@@ -245,6 +246,25 @@ def register_exceptions(app: FastAPI):
             }
         )
     )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request: Request, exception: RequestValidationError):
+        errors = [
+            {
+                "field": ".".join(str(loc) for loc in err["loc"][1:]),
+                "message": err["msg"]
+            }
+            for err in exception.errors()
+        ]
+        return JSONResponse(
+            content={
+                "success": False,
+                "message": "Validation error",
+                "errors": errors,
+                "error_code": "VALIDATION_ERROR"
+            },
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
 
     @app.exception_handler(500)
     async def internal_server_error(request, exception):
